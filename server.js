@@ -46,10 +46,10 @@ function homePage (req, res) {
     })
     // a manual quote will populate if the API gives error
     .catch(()=> {
-          const quote = {text:'Catching errors like a fisherman catches fish.', author: 'Tif Taylor'};
-          res.render('pages/index', {data: quote});
-        })
-        .catch(error => errorHandler(error, res));
+      const quote = {text:'Catching errors like a fisherman catches fish.', author: 'Tif Taylor'};
+      res.render('pages/index', {data: quote});
+    })
+    .catch(error => errorHandler(error, res));
 }
 
 
