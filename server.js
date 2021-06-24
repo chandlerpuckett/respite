@@ -41,7 +41,7 @@ app.post('/gallery', saveInfo);
 
 // ========================== Route Handlers ============================ //
 function homePage (req, res) {
-
+  // quote api
   const apiQuery = `http://api.forismatic.com/api/1.0/?method=getQuote&format=json&lang=en`;
 
   superagent.get(apiQuery)
@@ -161,7 +161,7 @@ function Image(artObj) {
 
   this.title = art.title;
   this.artist = art.artistDisplayName;
-  this.img = art.primaryImage;
+  this.img = art.primaryImageSmall;
 }
 
 
