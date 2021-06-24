@@ -195,7 +195,7 @@ function optimizeImg(imageObject){
     .resize(300)
     .toFormat('png')
     .png({quality: 100})
-    .toFile('output.png');
+    .toBuffer()
 }
 
 // =================== Start Server ===================== //
