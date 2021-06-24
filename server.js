@@ -90,16 +90,23 @@ function renderGallery (req, res) {
       Promise.all(promiseArr).then(values => {
 
         return values.map(val => {
-          const constructedObj = new Image (val);
+          let constructedObj = new Image (val);
+          // console.log('inside map func  :  ' + constructedObj.img);
+
+          // constructedObj.img = sharp(constructedObj.img)
+          //   .resize(300)
+          //   .toFormat('png');
+          // console.log('after sharp : ' + constructedObj.img);
+          sharp(constructedObj.img)
+            .toFormat('png');
+
+          console.log(constructedObj.img);
           return constructedObj;
         });
 
       })
-
         .then(vals => {
-          console.log('inside async func (vals) :: ' + vals);
-          console.log('path test (vals.img) :: ' + vals.img);
-
+          // console.log(vals);
           res.render('pages/gallery', {dataArray: vals});
         });
     })
