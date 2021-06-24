@@ -91,12 +91,15 @@ function renderGallery (req, res) {
 
         return values.map(val => {
           const constructedObj = new Image (val);
-
           return constructedObj;
         });
 
       })
+
         .then(vals => {
+          console.log('inside async func (vals) :: ' + vals);
+          console.log('path test (vals.img) :: ' + vals.img);
+
           res.render('pages/gallery', {dataArray: vals});
         });
     })
@@ -163,7 +166,7 @@ function Image(artObj) {
 
   this.title = art.title;
   this.artist = art.artistDisplayName;
-  this.img = optimizeImg(art.primaryImageSmall);
+  this.img = art.primaryImageSmall;
 }
 
 
@@ -189,16 +192,6 @@ function errorHandler(error, res) {
     status: 500,
     message: error.message
   });
-}
-
-function optimizeImg(imageObject){
-  sharp(imageObject)
-    .resize(300)
-    .toFormat('png')
-    .png({quality: 100})
-    .then((data) =>{
-      return(data);
-    });
 }
 
 // =================== Start Server ===================== //
