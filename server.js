@@ -6,6 +6,7 @@ const superagent = require('superagent');
 const pg = require('pg');
 const methodOverride = require('method-override');
 const { query } = require('express');
+const sharp = require('sharp');
 require('dotenv').config();
 
 
@@ -161,7 +162,7 @@ function Image(artObj) {
 
   this.title = art.title;
   this.artist = art.artistDisplayName;
-  this.img = art.primaryImageSmall;
+  this.img = optimizeImg(art.primaryImageSmall);
 }
 
 
@@ -189,6 +190,13 @@ function errorHandler(error, res) {
   });
 }
 
+function optimizeImg(imageObject){
+  sharp(imageObject)
+    .resize(300)
+    .toFormat('png')
+    .png({quality: 100})
+    .toFile('output.png');
+}
 
 // =================== Start Server ===================== //
 client.connect()
