@@ -91,6 +91,7 @@ function renderGallery (req, res) {
 
         return values.map(val => {
           const constructedObj = new Image (val);
+
           return constructedObj;
         });
 
@@ -195,7 +196,9 @@ function optimizeImg(imageObject){
     .resize(300)
     .toFormat('png')
     .png({quality: 100})
-    .toBuffer()
+    .then((data) =>{
+      return(data);
+    });
 }
 
 // =================== Start Server ===================== //
