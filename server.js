@@ -48,6 +48,26 @@ const kraken = new Kraken({
 });
 
 
+async function optimize(obj){
+  let params = {
+    url: obj.img,
+    wait: true
+  };
+
+  try {
+    kraken.url(params, function(err,data){
+      if (err){
+        console.log('ERROR : %s', err.message);
+      }else{
+        console.log('SUCCESS : %s',data.kraked_url);
+      }
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+
 // ========================== Route Handlers ============================ //
 function homePage (req, res) {
   // quote api
@@ -72,20 +92,20 @@ function renderGallery (req, res) {
   // --- query to get objectIds -- //
   const apiQuery = `https://collectionapi.metmuseum.org/public/collection/v1/search?departmentId=6&q=color`;
 
+  let arrRandom = [];
+  let promiseArr = [];
+
   // -- first superagent call to get ID array -- //
   superagent.get(apiQuery)
 
     .then(result => {
       const idArray = result.body.objectIDs;
 
-      let arrRandom = [];
 
       while (arrRandom.length < 20){
         const randomIndex = idArray[Math.floor(Math.random()*idArray.length) + 1];
         if(arrRandom.indexOf(randomIndex) === -1 ) arrRandom.push(randomIndex);
       }
-
-      let promiseArr = [];
 
       arrRandom.forEach(value => {
 
@@ -95,40 +115,29 @@ function renderGallery (req, res) {
         promiseArr.push(superagent.get(apiQueryObject));
       });
 
-      Promise.all(promiseArr).then(values => {
+    })
 
-        return values.map(val => {
-          let constructedObj = new Image (val);
+    .then(() => {
+      Promise.all(promiseArr)
 
-          // kraken optimization here
-          let params = {
-            url: constructedObj.img,
-            wait: true
-          };
+        .then(values => {
 
-          kraken.url(params, function(err,data){
-            if (err){
-              console.log('failed. error message: %s ', err);
-            } else {
-              console.log('success. optimized image url : %s ', data.kraked_url);
-              constructedObj.img = data.kraked_url;
-            }
+          return values.map(val => {
+            let constructedObj = new Image (val);
+            return constructedObj;
           });
 
-          console.log('url after optimization : ' + constructedObj.img);
-          return constructedObj;
-        });
-
-      })
-        .superagent.post()
+        })
 
         .then(vals => {
-          // console.log(vals);
           res.render('pages/gallery', {dataArray: vals});
         });
+
     })
+
     .catch(error => errorHandler(error, res));
 }
+
 
 
 function renderDB (req, res) {
