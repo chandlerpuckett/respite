@@ -54,17 +54,14 @@ async function optimize(obj){
     wait: true
   };
 
-  try {
-    kraken.url(params, function(err,data){
-      if (err){
-        console.log('ERROR : %s', err.message);
-      }else{
-        console.log('SUCCESS : %s',data.kraked_url);
-      }
+  return new Promise(resolve => {
+    kraken.url(params, function(data){
+      console.log(data);
+      return data;
     });
-  } catch (error) {
-    console.log(error);
-  }
+
+    resolve();
+  });
 }
 
 
@@ -94,6 +91,7 @@ function renderGallery (req, res) {
 
   let arrRandom = [];
   let promiseArr = [];
+  let imageArr = [];
 
   // -- first superagent call to get ID array -- //
   superagent.get(apiQuery)
@@ -101,32 +99,20 @@ function renderGallery (req, res) {
     .then(result => {
       const idArray = result.body.objectIDs;
 
-
-      while (arrRandom.length < 20){
-        const randomIndex = idArray[Math.floor(Math.random()*idArray.length) + 1];
-        if(arrRandom.indexOf(randomIndex) === -1 ) arrRandom.push(randomIndex);
-      }
-
-      arrRandom.forEach(value => {
-
-        const objectId = value;
-        const apiQueryObject = `https://collectionapi.metmuseum.org/public/collection/v1/objects/${objectId}`;
-
-        promiseArr.push(superagent.get(apiQueryObject));
-      });
+      createRandomIdx(idArray,arrRandom);
+      metMuseumQuery(arrRandom,promiseArr);
 
     })
 
     .then(() => {
-      Promise.all(promiseArr)
 
+      Promise.all(promiseArr)
         .then(values => {
 
-          return values.map(val => {
-            let constructedObj = new Image (val);
-            return constructedObj;
-          });
+          imageArr = constructImgObjects(values);
+          __opt(imageArr);
 
+          return imageArr;
         })
 
         .then(vals => {
@@ -224,6 +210,35 @@ function errorHandler(error, res) {
   res.status(500).render('pages/error', {
     status: 500,
     message: error.message
+  });
+}
+
+function createRandomIdx(idArray,arrRandom){
+  while (arrRandom.length < 20){
+    const randomIndex = idArray[Math.floor(Math.random()*idArray.length) + 1];
+    if(arrRandom.indexOf(randomIndex) === -1 ) arrRandom.push(randomIndex);
+  }
+}
+
+function metMuseumQuery(arrRandom,promiseArr){
+  arrRandom.forEach(value => {
+
+    const objectId = value;
+    const apiQueryObject = `https://collectionapi.metmuseum.org/public/collection/v1/objects/${objectId}`;
+
+    promiseArr.push(superagent.get(apiQueryObject));
+  });
+}
+
+async function __opt(imageArr){
+  await imageArr.forEach(obj => {
+    obj.img = optimize(obj);
+  });
+}
+
+function constructImgObjects(values){
+  return values.map(val => {
+    return new Image(val);
   });
 }
 
