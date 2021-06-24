@@ -6,8 +6,9 @@ const superagent = require('superagent');
 const pg = require('pg');
 const methodOverride = require('method-override');
 const { query } = require('express');
-const sharp = require('sharp');
 require('dotenv').config();
+const Kraken = require('kraken');
+
 
 
 // =================== Global Variables ===================== //
@@ -38,6 +39,13 @@ app.get('/gallery', renderGallery);
 app.get('/favorites', renderDB);
 app.get('/aboutus', renderAboutUs);
 app.post('/gallery', saveInfo);
+
+
+// ===================== Kraken Image Optimization ======================= //
+const kraken = new Kraken({
+  api_key: process.env.KRAKEN_KEY,
+  api_secret: process.env.KRAKEN_SECRET
+});
 
 
 // ========================== Route Handlers ============================ //
@@ -91,20 +99,29 @@ function renderGallery (req, res) {
 
         return values.map(val => {
           let constructedObj = new Image (val);
-          // console.log('inside map func  :  ' + constructedObj.img);
 
-          // constructedObj.img = sharp(constructedObj.img)
-          //   .resize(300)
-          //   .toFormat('png');
-          // console.log('after sharp : ' + constructedObj.img);
-          sharp(constructedObj.img)
-            .toFormat('png');
+          // kraken optimization here
+          let params = {
+            url: constructedObj.img,
+            wait: true
+          };
 
-          console.log(constructedObj.img);
+          kraken.url(params, function(err,data){
+            if (err){
+              console.log('failed. error message: %s ', err);
+            } else {
+              console.log('success. optimized image url : %s ', data.kraked_url);
+              constructedObj.img = data.kraked_url;
+            }
+          });
+
+          console.log('url after optimization : ' + constructedObj.img);
           return constructedObj;
         });
 
       })
+        .superagent.post()
+
         .then(vals => {
           // console.log(vals);
           res.render('pages/gallery', {dataArray: vals});
